@@ -34,19 +34,19 @@ else
     exit 1
 fi
 
-# Change user home diretory to proper mode and fix bashrc loading issue
+echo Change user home diretory to proper mode and fix bashrc loading issue
 sudo chmod 755 /home/${USER}
 echo '. ~/.bashrc' >> /home/${USER}/.bash_profile
 
-# Generate ssh key if needed
+echo Generate ssh key if needed
 [[ -e ~/.ssh/id_rsa ]] || ssh-keygen -t rsa -f ~/.ssh/id_rsa -q -N ""
 
-# Run deamonized tmate
+echo Run deamonized tmate
 echo -e "${INFO} Running tmate..."
 tmate -S ${TMATE_SOCK} new-session -d
 tmate -S ${TMATE_SOCK} wait tmate-ready
 
-# Print connection info
+echo Print connection info
 TMATE_SSH=$(tmate -S ${TMATE_SOCK} display -p '#{tmate_ssh}')
 TMATE_WEB=$(tmate -S ${TMATE_SOCK} display -p '#{tmate_web}')
 MSG="
@@ -62,19 +62,16 @@ ${TMATE_WEB}
 Run '\`touch ${CONTINUE_FILE}\`' to continue to the next step.
 "
 
-if [[ -n "${TELEGRAM_BOT_TOKEN}" && -n "${TELEGRAM_CHAT_ID}" ]]; then
-    echo -e "${INFO} Sending message to Telegram..."
-    curl -sSX POST "${TELEGRAM_API_URL:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-        -d "disable_web_page_preview=true" \
-        -d "parse_mode=Markdown" \
-        -d "chat_id=${TELEGRAM_CHAT_ID}" \
-        -d "text=${MSG}" >${TELEGRAM_LOG}
-    TELEGRAM_STATUS=$(cat ${TELEGRAM_LOG} | jq -r .ok)
-    if [[ ${TELEGRAM_STATUS} != true ]]; then
-        echo -e "${ERROR} Telegram message sending failed: $(cat ${TELEGRAM_LOG})"
-    else
-        echo -e "${INFO} Telegram message sent successfully!"
-    fi
+if [[ -n "${DINGTALK}" ]]; then
+    echo -e "${INFO} Sending message to DingTalk..."
+    curl "https://oapi.dingtalk.com/robot/send?access_token=" \
+    -H 'Content-Type: application/json'\
+    -d "{'msgtype': 'text', 
+        'text': {
+             'content': '${MSG}\nfox'
+        }
+      }"
+    
 fi
 
 while ((${PRT_COUNT:=1} <= ${PRT_TOTAL:=10})); do
