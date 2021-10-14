@@ -22,11 +22,6 @@ LOG_FILE='/tmp/ngrok.log'
 TELEGRAM_LOG="/tmp/telegram.log"
 CONTINUE_FILE="/tmp/continue"
 
-if [[ -z "${NGROK_TOKEN}" ]]; then
-    echo -e "${ERROR} Please set 'NGROK_TOKEN' environment variable."
-    exit 2
-fi
-
 if [[ -z "${SSH_PASSWORD}" && -z "${SSH_PUBKEY}" && -z "${GH_SSH_PUBKEY}" ]]; then
     echo -e "${ERROR} Please set 'SSH_PASSWORD' environment variable."
     exit 3
@@ -44,17 +39,20 @@ if [[ -n "${SSH_PUBKEY}" ]]; then
     chmod 600 /home/${USER}/.ssh/authorized_keys
 fi
 
+if [[ ! `command -v sshpass` ]]; then
+    echo -e "sshpass is not installed."
+    exit 1
+fi
+        
 sudo chmod 755 /home/${USER}
 echo '. ~/.bashrc' >> /home/${USER}/.bash_profile
 export | sed '/LANG/d' > /home/${USER}/.env
 echo '. ~/.env' >> /home/${USER}/.bash_profile
 
 echo -e "${INFO} Start SSH tunnel for SSH port..."
-eval `ssh-agent`
-echo "${NGROK_TOKEN}" | base64 --decode | ssh-add -
 random_port=`shuf -i 20000-65000 -n 1`
 screen -dmS ngrok bash -c\
-    "ssh -NTR $random_port:127.0.0.1:22 -oStrictHostKeyChecking=no -oServerAliveInterval=30 -oServerAliveCountMax=60 -C tunnel@${TUNNEL_HOST} -v 2>&1 | tee $LOG_FILE"
+    "sshpass -p ${SSH_PASSWORD} ssh -NTR $random_port:127.0.0.1:22 -oStrictHostKeyChecking=no -oServerAliveInterval=20 -oServerAliveCountMax=60 -C tunnel@${TUNNEL_HOST} -v 2>&1 | tee $LOG_FILE"
 
 while ((${SECONDS_LEFT:=10} > 0)); do
     echo -e "${INFO} Please wait ${SECONDS_LEFT}s ..."
@@ -75,20 +73,16 @@ if [[ -e "${LOG_FILE}" && -n "${ERRORS_LOG}" ]]; then
 🔔 *TIPS:*
 Run '\`touch ${CONTINUE_FILE}\`' to continue to the next step.
 "
-    if [[ -n "${TELEGRAM_BOT_TOKEN}" && -n "${TELEGRAM_CHAT_ID}" ]]; then
-        echo -e "${INFO} Sending message to Telegram..."
-        curl -sSX POST "${TELEGRAM_API_URL:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d "disable_web_page_preview=true" \
-            -d "parse_mode=Markdown" \
-            -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            -d "text=${MSG}" >${TELEGRAM_LOG}
-        TELEGRAM_STATUS=$(cat ${TELEGRAM_LOG} | jq -r .ok)
-        if [[ ${TELEGRAM_STATUS} != true ]]; then
-            echo -e "${ERROR} Telegram message sending failed: $(cat ${TELEGRAM_LOG})"
-        else
-            echo -e "${INFO} Telegram message sent successfully!"
-        fi
-    fi
+    echo -e "${INFO} Sending message to DingTalk..."
+    curl "https://oapi.dingtalk.com/robot/send?access_token=${DINGTALK}" \
+    -H 'Content-Type: application/json' \
+    -d "{
+    \"msgtype\": \"text\",
+    \"text\": {
+            \"content\": \"${MSG}\nfox\"
+            }
+    }"
+    
     while ((${PRT_COUNT:=1} <= ${PRT_TOTAL:=10})); do
         SECONDS_LEFT=${PRT_INTERVAL_SEC:=10}
         while ((${PRT_COUNT} > 1)) && ((${SECONDS_LEFT} > 0)); do
@@ -115,5 +109,3 @@ while [[ -n $(ps aux | grep NTR) ]]; do
         exit 0
     fi
 done
-
-# ref: https://gist.github.com/retyui/7115bb6acf151351a143ec8f96a7c561
