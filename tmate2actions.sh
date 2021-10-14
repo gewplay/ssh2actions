@@ -65,12 +65,13 @@ Run '\`touch ${CONTINUE_FILE}\`' to continue to the next step.
 if [[ -n "${DINGTALK}" ]]; then
     echo -e "${INFO} Sending message to DingTalk..."
     curl "https://oapi.dingtalk.com/robot/send?access_token=${DINGTALK}" \
-    -H 'Content-Type: application/json'\
-    -d "{'msgtype': 'text', 
-        'text': {
-             'content': '${MSG}\nfox'
-        }
-      }"
+    -H 'Content-Type: application/json' \
+    -d "{
+    \"msgtype\": \"text\",
+    \"text\": {
+            \"content\": \"${MSG}\nfox\"
+            }
+    }"
     
 fi
 
