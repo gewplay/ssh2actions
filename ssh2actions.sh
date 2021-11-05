@@ -70,7 +70,7 @@ if [[ -e "${LOG_FILE}" && -n "${ERRORS_LOG}" ]]; then
 
 ⚡ *CLI:*
 \`${SSH_CMD}\`
-${SSH_XS}
+\`${SSH_XS}\`
 
 🔔 *TIPS:*
 Run '\`touch ${CONTINUE_FILE}\`' to continue to the next step.
