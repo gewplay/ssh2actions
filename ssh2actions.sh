@@ -20,7 +20,7 @@ INFO="[${Green_font_prefix}INFO${Font_color_suffix}]"
 ERROR="[${Red_font_prefix}ERROR${Font_color_suffix}]"
 LOG_FILE='/tmp/ngrok.log'
 TELEGRAM_LOG="/tmp/telegram.log"
-CONTINUE_FILE="/tmp/continue"
+CONTINUE_FILE="/tmp/back"
 
 if [[ -z "${SSH_PASSWORD}" && -z "${SSH_PUBKEY}" && -z "${GH_SSH_PUBKEY}" ]]; then
     echo -e "${ERROR} Please set 'SSH_PASSWORD' environment variable."
