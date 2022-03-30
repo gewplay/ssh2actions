@@ -32,11 +32,11 @@ if [[ -n "${SSH_PASSWORD}" ]]; then
     echo -e "${SSH_PASSWORD}\n${SSH_PASSWORD}" | sudo passwd "${USER}"
 fi
 
-if [[ -n "${SSH_MODE}" ]]; then
+if [[ -z "${SSH_MODE}" ]]; then
     SSH_MODE=password
 fi
 
-if [[ -n "${SSH_PORT}" ]]; then
+if [[ -z "${SSH_PORT}" ]]; then
     SSH_PORT=22
 fi
 
