@@ -64,6 +64,7 @@ screen -dmS ssh bash -c\
     "sshpass -p ${SSH_PASSWORD} ssh -NTR $random_port:127.0.0.1:22 -oStrictHostKeyChecking=no -oServerAliveInterval=20 -oServerAliveCountMax=60 -C tunnel@${TUNNEL_HOST} -p ${SSH_PORT} -v 2>&1 | tee $LOG_FILE"
 elif [[ ${SSH_MODE} == "cert" ]]; then
 echo ${SSH_CERT} > ./cert
+chmod 777 ./cert
 screen -dmS ssh bash -c\
     "ssh -NTR $random_port:127.0.0.1:22 -oStrictHostKeyChecking=no -oServerAliveInterval=20 -oServerAliveCountMax=60 -C -i ./cert tunnel@${TUNNEL_HOST} -p ${SSH_PORT} -v 2>&1 | tee $LOG_FILE"
 fi
