@@ -32,6 +32,14 @@ if [[ -n "${SSH_PASSWORD}" ]]; then
     echo -e "${SSH_PASSWORD}\n${SSH_PASSWORD}" | sudo passwd "${USER}"
 fi
 
+if [[ -n "${SSH_MODE}" ]]; then
+    SSH_MODE=password
+fi
+
+if [[ -n "${SSH_PORT}" ]]; then
+    SSH_PORT=22
+fi
+
 if [[ -n "${SSH_PUBKEY}" ]]; then
     echo -e "${INFO} Set user(${USER}) authorized key ..."
     mkdir -p /home/${USER}/.ssh
@@ -51,9 +59,14 @@ echo '. ~/.env' >> /home/${USER}/.bash_profile
 
 echo -e "${INFO} Start SSH tunnel for SSH port..."
 random_port=`shuf -i 20000-65000 -n 1`
-screen -dmS ngrok bash -c\
+if [[ ${SSH_MODE} == "password" ]]; then
+screen -dmS ssh bash -c\
     "sshpass -p ${SSH_PASSWORD} ssh -NTR $random_port:127.0.0.1:22 -oStrictHostKeyChecking=no -oServerAliveInterval=20 -oServerAliveCountMax=60 -C tunnel@${TUNNEL_HOST} -v 2>&1 | tee $LOG_FILE"
-
+elif [[ ${SSH_MODE} == "cert" ]]; then
+echo ${SSH_CERT} > ./cert
+screen -dmS ssh bash -c\
+    "ssh -NTR $random_port:127.0.0.1:22 -oStrictHostKeyChecking=no -oServerAliveInterval=20 -oServerAliveCountMax=60 -C -i ./cert tunnel@${TUNNEL_HOST} -p ${SSH_PORT}-v 2>&1 | tee $LOG_FILE"
+fi
 while ((${SECONDS_LEFT:=10} > 0)); do
     echo -e "${INFO} Please wait ${SECONDS_LEFT}s ..."
     sleep 1
