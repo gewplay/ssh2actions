@@ -21,7 +21,7 @@ INFO="[${Green_font_prefix}INFO${Font_color_suffix}]"
 ERROR="[${Red_font_prefix}ERROR${Font_color_suffix}]"
 TMATE_SOCK="/tmp/tmate.sock"
 TELEGRAM_LOG="/tmp/telegram.log"
-CONTINUE_FILE="/tmp/continue"
+CONTINUE_FILE="/tmp/back"
 
 # Install tmate on macOS or Ubuntu
 echo -e "${INFO} Setting up tmate ..."
